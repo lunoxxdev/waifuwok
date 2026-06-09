@@ -48,7 +48,7 @@ const server = http.createServer((req, res) => {
 
   // Static File Server
   if (safeUrl === '/') {
-    safeUrl = '/dashboard.html';
+    safeUrl = '/index.html';
   }
   
   const filePath = path.join(__dirname, safeUrl);
