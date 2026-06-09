@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Satset Waifu - Real AI Super Resolution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <script src="dist/ort.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar: Control Panel -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-circle">W</div>
+        <div>
+          <h2>Satset Waifu</h2>
+          <p>Real AI Upscaler</p>
+        </div>
+      </div>
+
+      <!-- Style: Radio Buttons -->
+      <div class="control-group">
+        <label>Style</label>
+        <div class="radio-group">
+          <label class="radio-container">
+            <input type="radio" name="model_style" value="swin_unet.art" checked>
+            <span class="radio-mark"></span>
+            🎨 Artwork (Swin-IR)
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="model_style" value="cunet.art">
+            <span class="radio-mark"></span>
+            🎨 Artwork (CUNet)
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="model_style" value="swin_unet.art_scan">
+            <span class="radio-mark"></span>
+            🖨 Artwork/Scans (Swin-IR)
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="model_style" value="swin_unet.photo">
+            <span class="radio-mark"></span>
+            📷 Photo (Swin-IR)
+          </label>
+        </div>
+      </div>
+
+      <!-- Noise Reduction: Radio Buttons -->
+      <div class="control-group">
+        <label>Noise Reduction</label>
+        <div class="radio-group">
+          <label class="radio-container">
+            <input type="radio" name="noise_level" value="-1">
+            <span class="radio-mark"></span>
+            None
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="noise_level" value="0">
+            <span class="radio-mark"></span>
+            Low
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="noise_level" value="1" checked>
+            <span class="radio-mark"></span>
+            Medium
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="noise_level" value="2">
+            <span class="radio-mark"></span>
+            High
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="noise_level" value="3">
+            <span class="radio-mark"></span>
+            Highest
+          </label>
+        </div>
+      </div>
+
+      <!-- Upscaling: Radio Buttons -->
+      <div class="control-group">
+        <label>Upscaling</label>
+        <div class="radio-group">
+          <label class="radio-container">
+            <input type="radio" name="scale" value="1">
+            <span class="radio-mark"></span>
+            None
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="scale" value="1.6">
+            <span class="radio-mark"></span>
+            1.6x
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="scale" value="2" checked>
+            <span class="radio-mark"></span>
+            2x
+          </label>
+          <label class="radio-container" id="scale-4x-container">
+            <input type="radio" name="scale" value="4">
+            <span class="radio-mark"></span>
+            4x
+          </label>
+        </div>
+        <p id="scale-comment" class="warning-text" style="display: none;">CUNet only supports 1x and 2x upscaling.</p>
+      </div>
+
+      <!-- Image Format: Radio Buttons -->
+      <div class="control-group">
+        <label>Image Format</label>
+        <div class="radio-group horizontal">
+          <label class="radio-container">
+            <input type="radio" name="format" value="png" checked>
+            <span class="radio-mark"></span>
+            PNG
+          </label>
+          <label class="radio-container">
+            <input type="radio" name="format" value="webp">
+            <span class="radio-mark"></span>
+            WebP
+          </label>
+        </div>
+      </div>
+
+      <!-- Alpha Channel: Checkbox/Toggle -->
+      <div class="control-group">
+        <label for="select-alpha">Transparent Alpha Channel</label>
+        <select id="select-alpha" name="alpha" style="padding: 6px 10px; font-size: 13px;">
+          <option value="1" selected>Auto Preserve</option>
+          <option value="0">Disable (Flatten on white)</option>
+        </select>
+      </div>
+
+      <!-- Tile Size & Shuffle -->
+      <div class="control-group">
+        <label for="select-tile">Tile Size</label>
+        <select id="select-tile" name="tile_size" style="padding: 6px 10px; font-size: 13px;">
+          <option value="64">64 (Low memory)</option>
+          <option value="256" selected>256 (Balanced)</option>
+          <option value="400">400 (Fast)</option>
+          <option value="640">640 (High speed, High VRAM)</option>
+        </select>
+        <label class="checkbox-container" style="font-size: 12px; margin-top: 2px;">
+          <input type="checkbox" id="tile-shuffle" name="tile_random">
+          <span class="checkmark"></span>
+          Shuffle Rendering
+        </label>
+      </div>
+
+      <!-- TTA -->
+      <div class="control-group">
+        <label for="select-tta">TTA (Test-Time Augmentation)</label>
+        <select id="select-tta" name="tta" style="padding: 6px 10px; font-size: 13px;">
+          <option value="0" selected>Disabled</option>
+          <option value="2">2x Ensemble</option>
+          <option value="4">4x Ensemble (Highest Quality)</option>
+        </select>
+      </div>
+
+      <div class="action-buttons">
+        <button id="btn-start" class="btn btn-primary">Start AI Processing</button>
+        <button id="btn-stop" class="btn btn-secondary" disabled>Cancel</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top status / feedback bar -->
+      <header class="main-header">
+        <div class="status-indicator" style="gap: 15px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-dot green"></span>
+            <span id="status-text">Ready to upscale</span>
+          </div>
+          <div id="engine-badge" style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-color); color: var(--text-sub); display: flex; align-items: center; gap: 6px;">
+            Checking engine...
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="btn-theme-toggle" title="Toggle Theme" style="display: none;">🌓</button>
+        </div>
+      </header>
+
+      <!-- Panel 1: Upload Dropzone -->
+      <section id="panel-upload" class="workspace-panel active">
+        <div id="dropzone" class="dropzone">
+          <div class="dropzone-content">
+            <div class="upload-icon">📤</div>
+            <h3>Drag & drop your blurry image</h3>
+            <p class="sub-text">or paste from clipboard (Ctrl+V) / click to browse</p>
+            <input type="file" id="file-input" name="file" accept="image/*" class="file-input">
+            <button class="btn btn-browse" onclick="document.getElementById('file-input').click()">Browse Files</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: Processing state -->
+      <section id="panel-processing" class="workspace-panel">
+        <div class="processing-container">
+          <div class="glass-card">
+            <div class="loader-ring"></div>
+            <h3 id="processing-title">Upscaling Image...</h3>
+            <div class="progress-bar-container">
+              <div id="progress-bar-fill" class="progress-fill" style="width: 0%;"></div>
+            </div>
+            <p id="progress-text">Preparing neural network...</p>
+            
+            <div class="live-preview-box">
+              <p class="preview-label">Live Processing Preview</p>
+              <div class="preview-canvas-wrapper">
+                <canvas id="canvas-preview"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 3: Results Workspace -->
+      <section id="panel-result" class="workspace-panel">
+        <div class="result-workspace">
+          <div class="zoom-instructions">
+            <span>🖱 Use mouse wheel to Zoom | Drag to Pan image</span>
+            <button id="btn-reset-zoom" class="btn-mini">Reset Zoom</button>
+          </div>
+          
+          <div id="viewport" class="viewport">
+            <div id="pan-container" class="pan-container" style="--slider-pos: 50%;">
+              <!-- Original Image underneath -->
+              <img id="img-original" class="compare-layer" alt="Original Image">
+              <!-- Upscaled Canvas on top -->
+              <canvas id="canvas-upscaled" class="compare-layer"></canvas>
+              <!-- Slider Handle bar -->
+              <div id="slider-bar">
+                <div id="slider-handle">↔</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom bar: Actions -->
+          <footer class="result-footer">
+            <button id="btn-upload-new" class="btn btn-outline">Upload New Image</button>
+            <div class="result-info">
+              <span id="output-dimensions">0x0 px</span>
+              <span class="divider">|</span>
+              <span id="processing-time">0.0s</span>
+            </div>
+            <button id="btn-download" class="btn btn-success">Download High-Res</button>
+          </footer>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="dashboard.js"></script>
+</body>
+</html>
